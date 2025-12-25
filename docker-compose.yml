@@ -1,0 +1,63 @@
+# Docker Compose para demostración (Python/Django)
+# Permite ejecutar ambas versiones side-by-side
+
+version: '3.8'
+
+services:
+  # =============================================
+  # Aplicación INSEGURA (puerto 8001)
+  # =============================================
+  app-insecure:
+    image: demo-app:insecure
+    build:
+      context: ./app
+      dockerfile: ../insecure/Dockerfile
+    container_name: demo-insecure
+    ports:
+      - "8001:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+    # ❌ Sin restricciones de seguridad
+    # ❌ Ejecutando como root por defecto
+    # ❌ Usando servidor de desarrollo Django
+
+    # =============================================
+    # Aplicación SEGURA (puerto 8002)
+    # =============================================
+  app-secure:
+    image: demo-app:secure
+    build:
+      context: ./app
+      dockerfile: ../secure/Dockerfile
+    container_name: demo-secure
+    ports:
+      - "8002:8000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      # ✅ Secretos se inyectan en runtime, no hardcodeados
+      # - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      # ✅ Mejoras de seguridad adicionales en runtime
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=10m
+    cap_drop:
+      - ALL
+    # ✅ Límites de recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

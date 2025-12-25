@@ -1,0 +1,52 @@
+#!/bin/bash
+# ================================================================
+# Script para construir ambas imágenes Docker
+# ================================================================
+
+set -e
+
+echo "=========================================="
+echo "  Docker Hardening Demo - Build Script"
+echo "=========================================="
+
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Directorio base
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+echo -e "${YELLOW}📁 Directorio del proyecto: $PROJECT_DIR${NC}"
+
+# Construir imagen INSEGURA
+echo ""
+echo -e "${RED}🔓 Construyendo imagen INSEGURA...${NC}"
+docker build \
+    -t demo-app:insecure \
+    -f "$PROJECT_DIR/insecure/Dockerfile" \
+    "$PROJECT_DIR/app"
+
+echo -e "${RED}✅ Imagen insegura construida: demo-app:insecure${NC}"
+
+# Construir imagen SEGURA
+echo ""
+echo -e "${GREEN}🔒 Construyendo imagen SEGURA...${NC}"
+docker build \
+    -t demo-app:secure \
+    -f "$PROJECT_DIR/secure/Dockerfile" \
+    "$PROJECT_DIR/app"
+
+echo -e "${GREEN}✅ Imagen segura construida: demo-app:secure${NC}"
+
+# Mostrar tamaños
+echo ""
+echo "=========================================="
+echo "  📊 Comparación de tamaños"
+echo "=========================================="
+docker images demo-app --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+
+echo ""
+echo -e "${GREEN}✅ Build completado exitosamente${NC}"
