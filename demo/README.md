@@ -11,8 +11,7 @@ Esta guía explica cómo realizar la demostración del proyecto de Docker Harden
 ## Paso 1: Construir las Imágenes
 
 ```powershell
-cd c:\Users\victo\Documents\proteccion_info\docker-hardened-image
-
+cd ruta/al/proyecto
 # Construir imagen INSEGURA
 docker build -t demo-app:insecure -f insecure/Dockerfile ./app
 
