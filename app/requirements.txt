@@ -1,3 +1,22 @@
-# Django and dependencies
-Django>=4.2,<5.0
-gunicorn>=21.0.0
+# =============================================
+# REQUIREMENTS WITH HASH VERIFICATION
+# Generated with: pip download <pkg> && pip hash <pkg>.whl
+# =============================================
+
+# Django framework
+Django==4.2.9 \
+    --hash=sha256:2cc2fc7d1708ada170ddd6c99f35cc25db664f165d3794bc7723f46b2f8c8984
+
+# Gunicorn WSGI server
+gunicorn==21.2.0 \
+    --hash=sha256:3213aa5e8c24949e792bcacfc176fef362e7aac80b76c56f6b5122bf350722f0
+
+# Dependencies (pinned with hashes)
+asgiref==3.11.0 \
+    --hash=sha256:1db9021efadb0d9512ce8ffaf72fcef601c7b73a8807a1bb2ef143dc6b14846d
+
+sqlparse==0.5.5 \
+    --hash=sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba
+
+packaging==25.0 \
+    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484

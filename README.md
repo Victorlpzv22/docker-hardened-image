@@ -11,10 +11,11 @@ Este proyecto demuestra las diferencias de seguridad entre una imagen Docker vul
 
 | Métrica | Imagen Insegura | Imagen Segura | Reducción |
 |---------|-----------------|---------------|-----------|
-| Tamaño | 1.79 GB | 263 MB | 85% |
-| Total CVEs | 1,321 | 105 | 92% |
-| CVEs HIGH | 146 | 4 | 97% |
-| CVEs MEDIUM | 392 | 23 | 94% |
+| Tamaño | 1.79 GB | 153 MB | 91% |
+| Total CVEs | 1,257 | 29 | 97.7% |
+| CVEs CRITICAL | 6 | 2 | 67% |
+| CVEs HIGH | 94 | 10 | 89% |
+| CVEs MEDIUM | 334 | 16 | 95% |
 
 ## Estructura del Proyecto
 
@@ -29,7 +30,8 @@ docker-hardened-image/
 │   └── Dockerfile
 ├── secure/                 # Dockerfile hardened
 │   ├── Dockerfile
-│   └── .dockerignore
+│   ├── .dockerignore
+│   └── seccomp-profile.json
 ├── scripts/                # Scripts de automatización
 │   ├── build-all.ps1
 │   └── scan-images.ps1
@@ -93,13 +95,18 @@ docker exec demo-secure env | findstr SECRET
 
 | Problema | Imagen Insegura | Imagen Segura |
 |----------|-----------------|---------------|
-| Base image | `python:latest` (1.2 GB) | `python:3.12-slim` (200 MB) |
-| Usuario | root | appuser (UID 1001) |
+| Base image | `python:latest` (1.79 GB) | `python:3.12-alpine` (153 MB) |
+| Usuario | root | UID 1001 (non-root) |
 | Servidor | Django runserver | Gunicorn (producción) |
 | Secretos | Hardcoded en Dockerfile | Inyectados en runtime |
 | DEBUG | True | False |
 | Health check | No | Sí |
 | Multi-stage build | No | Sí |
+| Seccomp profile | Default | Custom restrictivo |
+| Network isolation | No | Sí (red interna) |
+| Dependency hashes | No | Sí (SHA256) |
+| AppArmor | No | docker-default |
+| Logging limits | No | max-size: 10m |
 
 ## Documentación
 
