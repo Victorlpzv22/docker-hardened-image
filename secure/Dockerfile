@@ -29,10 +29,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /build
 
 # ✅ MEJORA 4: Copiar requirements primero (cache de capas)
-COPY requirements.txt .
+COPY ../app/requirements.txt .
 
 # ✅ MEJORA 5: Instalar dependencias con verificación de hash
 # --require-hashes asegura integridad de paquetes
+# --mount=type=cache cachea los paquetes de pip entre builds (requiere BuildKit)
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir --require-hashes -r requirements.txt
 
@@ -59,7 +60,7 @@ RUN chown appuser:django /app
 COPY --from=builder --chown=1001:1001 /opt/venv /opt/venv
 
 # ✅ MEJORA 9: Copiar código con permisos correctos
-COPY --chown=1001:1001 . .
+COPY --chown=1001:1001 ../app/ .
 
 # ✅ MEJORA 10: Usar el virtualenv
 ENV PATH="/opt/venv/bin:$PATH"

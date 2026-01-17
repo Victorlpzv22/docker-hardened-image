@@ -21,6 +21,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${YELLOW}📁 Directorio del proyecto: $PROJECT_DIR${NC}"
 
+# Desactivar BuildKit para compatibilidad
+export DOCKER_BUILDKIT=0
+echo -e "${YELLOW}⚙️  BuildKit desactivado para compatibilidad${NC}"
+
 # Construir imagen INSEGURA
 echo ""
 echo -e "${RED}🔓 Construyendo imagen INSEGURA...${NC}"
@@ -34,12 +38,24 @@ echo -e "${RED}✅ Imagen insegura construida: demo-app:insecure${NC}"
 # Construir imagen SEGURA
 echo ""
 echo -e "${GREEN}🔒 Construyendo imagen SEGURA...${NC}"
-docker build \
+
+# Intentar con BuildKit primero
+echo -e "${YELLOW}⚙️  Intentando build con BuildKit...${NC}"
+export DOCKER_BUILDKIT=1
+if docker build \
     -t demo-app:secure \
     -f "$PROJECT_DIR/secure/Dockerfile" \
-    "$PROJECT_DIR/app"
-
-echo -e "${GREEN}✅ Imagen segura construida: demo-app:secure${NC}"
+    "$PROJECT_DIR/app" 2>/dev/null; then
+    echo -e "${GREEN}✅ Imagen segura construida con BuildKit: demo-app:secure${NC}"
+else
+    echo -e "${YELLOW}⚠️  BuildKit falló, reintentando sin BuildKit...${NC}"
+    export DOCKER_BUILDKIT=0
+    docker build \
+        -t demo-app:secure \
+        -f "$PROJECT_DIR/secure/Dockerfile" \
+        "$PROJECT_DIR/app"
+    echo -e "${GREEN}✅ Imagen segura construida sin BuildKit: demo-app:secure${NC}"
+fi
 
 # Mostrar tamaños
 echo ""
