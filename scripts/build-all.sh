@@ -31,7 +31,7 @@ echo -e "${RED}🔓 Construyendo imagen INSEGURA...${NC}"
 docker build \
     -t demo-app:insecure \
     -f "$PROJECT_DIR/insecure/Dockerfile" \
-    "$PROJECT_DIR/app"
+    "$PROJECT_DIR"
 
 echo -e "${RED}✅ Imagen insegura construida: demo-app:insecure${NC}"
 
@@ -45,7 +45,7 @@ export DOCKER_BUILDKIT=1
 if docker build \
     -t demo-app:secure \
     -f "$PROJECT_DIR/secure/Dockerfile" \
-    "$PROJECT_DIR/app" 2>/dev/null; then
+    "$PROJECT_DIR" 2>/dev/null; then
     echo -e "${GREEN}✅ Imagen segura construida con BuildKit: demo-app:secure${NC}"
 else
     echo -e "${YELLOW}⚠️  BuildKit falló, reintentando sin BuildKit...${NC}"
@@ -53,7 +53,7 @@ else
     docker build \
         -t demo-app:secure \
         -f "$PROJECT_DIR/secure/Dockerfile" \
-        "$PROJECT_DIR/app"
+        "$PROJECT_DIR"
     echo -e "${GREEN}✅ Imagen segura construida sin BuildKit: demo-app:secure${NC}"
 fi
 

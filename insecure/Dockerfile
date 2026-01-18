@@ -46,7 +46,7 @@ WORKDIR /app
 
 # ❌ PROBLEMA 6: Copiando TODO sin .dockerignore
 # Puede incluir archivos sensibles como .git, .env, __pycache__
-COPY . .
+COPY app/ .
 
 # ❌ PROBLEMA 7: Sin --no-cache-dir, sin hash verification
 RUN pip install -r requirements.txt

@@ -40,11 +40,11 @@ Los resultados experimentales muestran una mejora drástica en la postura de seg
 | Métrica | Imagen Insegura | Imagen Segura | Mejora |
 |---------|:---------------:|:-------------:|:------:|
 | **Tamaño de Imagen** | 1.22 GB | 90.4 MB | **92.6%** ↓ |
-| **Total CVEs (Trivy)** | 1,257 | 29 | **97.7%** ↓ |
-| **CVEs CRITICAL** | 4 | 2 | **50%** ↓ |
-| **CVEs HIGH** | 84 | 10 | **88%** ↓ |
-| **CVEs OS (Debian/Alpine)** | 88 | 0 | **100%** ↓ |
-| **CVEs Python Packages** | 12 | 12 | Idéntico |
+| **Total CVEs (Trivy)** | 1,231 | 4 | **99.7%** ↓ |
+| **CVEs CRITICAL** | 4 | 0 | **100%** ↓ |
+| **CVEs HIGH** | 84 | 0 | **100%** ↓ |
+| **CVEs OS (Debian/Alpine)** | 1,229 | 0 | **100%** ↓ |
+| **CVEs Python Packages** | 2 | 4 | +2 (todas MEDIUM) |
 | **Base Image** | python:latest (Debian 13.3) | python:3.12-alpine (3.23.2) | Específica |
 | **Usuario de Ejecución** | `root` (UID 0) | `appuser` (UID 1001) | **CRÍTICO** |
 | **Secretos Hardcodeados** | 6 variables ENV | 0 (runtime injection) | **100%** ↓ |
@@ -56,12 +56,12 @@ Los resultados experimentales muestran una mejora drástica en la postura de seg
 
 ### Conclusión Principal
 
-La implementación de prácticas de hardening en Docker reduce el **tamaño de la imagen en un 92.6%** (de 1.22GB a 90.4MB) y las **vulnerabilidades en un 97.7%** (de 1,257 CVEs a 29 CVEs) mediante 16 mejoras implementadas, sin afectar la funcionalidad de la aplicación Django.
+La implementación de prácticas de hardening en Docker reduce el **tamaño de la imagen en un 92.6%** (de 1.22GB a 90.4MB) y las **vulnerabilidades en un 99.7%** (de 1,231 CVEs a 4 CVEs) mediante 16 mejoras implementadas, sin afectar la funcionalidad de la aplicación Django.
 
 **Datos verificados mediante Trivy v0.68:**
-- Imagen insegura: **1,257 vulnerabilidades totales** (4 CRITICAL, 84 HIGH, 88 en Debian OS)
-- Imagen segura: **29 vulnerabilidades totales** (2 CRITICAL, 10 HIGH, 0 en Alpine OS)
-- **Reducción: 1,228 vulnerabilidades eliminadas (97.7%)**
+- Imagen insegura: **1,231 vulnerabilidades totales** (4 CRITICAL, 84 HIGH, 321 MEDIUM, 817 LOW, 5 UNKNOWN; 1,229 pertenecen al OS Debian)
+- Imagen segura: **4 vulnerabilidades totales** (todas MEDIUM en dependencias Python)
+- **Reducción: 1,227 vulnerabilidades eliminadas (99.7%)**
 
 ---
 
@@ -179,13 +179,13 @@ $$
 Donde $n$ es el número de paquetes instalados.
 
 **Comparación (Datos reales de Trivy):**
-- `python:latest` (Debian 13.3): 493 paquetes → **1,257 CVEs totales**
-  - Sistema operativo Debian: **88 CVEs** (4 CRITICAL, 84 HIGH)
-  - Paquetes Python: **12 CVEs** (2 CRITICAL, 10 HIGH)
-- `python:3.12-alpine` (Alpine 3.23.2): 38 paquetes → **29 CVEs totales**
+- `python:latest` (Debian 13.3): 493 paquetes → **1,231 CVEs totales**
+  - Sistema operativo Debian: **1,229 CVEs** (4 CRITICAL, 84 HIGH, 319 MEDIUM, 817 LOW, 5 UNKNOWN)
+  - Paquetes Python: **2 CVEs MEDIUM**
+- `python:3.12-alpine` (Alpine 3.23.2): 38 paquetes → **4 CVEs totales**
   - Sistema operativo Alpine: **0 CVEs** ✅
-  - Paquetes Python: **12 CVEs** (2 CRITICAL, 10 HIGH - mismo Django/Gunicorn)
-  - **Reducción en OS: 88 → 0 CVEs (100%)**
+  - Paquetes Python: **4 CVEs MEDIUM** (Django y pip)
+  - **Reducción en OS: 1,229 → 0 CVEs (100%)**
 
 #### Segregación de Capas (Multi-stage builds)
 Mantener herramientas de compilación fuera de la imagen final:
@@ -524,7 +524,7 @@ FROM python:3.12-alpine  # ✅ Versión específica + Alpine
 |---------|:----------------------:|:------------------:|
 | **Tamaño base** | 1.22 GB | 50 MB |
 | **Paquetes OS** | ~400 | ~90 |
-| **Vulnerabilidades** | ~1,257 CVEs | ~29 CVEs |
+| **Vulnerabilidades** | ~1,231 CVEs | ~4 CVEs |
 | **Tiempo de pull** | ~3-5 min | ~15-30 seg |
 | **Libc** | glibc | musl |
 
@@ -772,66 +772,55 @@ networks:
 
 ### Resultados del Escaneo de Vulnerabilidades (Trivy v0.68)
 
-**Fecha de escaneo:** 17 de enero de 2026
+**Fecha de escaneo:** 18 de enero de 2026
 
 #### Imagen Insegura (demo-app:insecure)
 
-**Total de vulnerabilidades: 1,257**
+**Total de vulnerabilidades: 1,231** (incluye 5 con severidad UNKNOWN)
 
-| Categoría | CRITICAL | HIGH | MEDIUM | LOW | Total |
-|-----------|:--------:|:----:|:------:|:---:|:-----:|
-| **Debian OS** | 4 | 84 | - | - | 88 |
-| **Python Packages** | 2 | 10 | - | - | 12 |
-| **TOTAL** | **6** | **94** | **334** | **823** | **1,257** |
+| Categoría | CRITICAL | HIGH | MEDIUM | LOW | UNKNOWN | Total |
+|-----------|:--------:|:----:|:------:|:---:|:------:|:-----:|
+| **Debian OS** | 4 | 84 | 319 | 817 | 5 | 1,229 |
+| **Python Packages** | 0 | 0 | 2 | 0 | 0 | 2 |
+| **TOTAL** | **4** | **84** | **321** | **817** | **5** | **1,231** |
 
-**Vulnerabilidades críticas encontradas:**
-- **CVE-2025-13836** (CRITICAL): cpython - DoS en http.client
-- **CVE-2024-42005** (CRITICAL): Django - SQL injection en QuerySet.values()
-- **CVE-2025-64459** (CRITICAL): Django - SQL injection
-- **CVE-2026-0861** (HIGH): glibc - Integer overflow en memalign
-
-**Paquetes afectados:**
-- `linux-libc-dev`: 58 CVEs HIGH (kernel vulnerabilities)
-- `libc6`, `libc-bin`, `libc-dev-bin`: CVE-2026-0861 (glibc)
-- `libpython3.13-*`: CVE-2025-13836, CVE-2025-8194
-- `Django 4.2.9`: 10 CVEs (2 CRITICAL, 8 HIGH)
-- `gunicorn 21.2.0`: 2 CVEs HIGH
+**Hallazgos relevantes:**
+- El grueso proviene del sistema operativo Debian (kernel/userland), que concentra 1,229 CVEs.
+- Dependencias Python: 2 CVEs MEDIUM en Django (CVE-2025-13372 y CVE-2025-64460).
 
 #### Imagen Segura (demo-app:secure)
 
-**Total de vulnerabilidades: 29**
+**Total de vulnerabilidades: 4**
 
-| Categoría | CRITICAL | HIGH | MEDIUM | LOW | Total |
-|-----------|:--------:|:----:|:------:|:---:|:-----:|
-| **Alpine OS** | 0 | 0 | 0 | 0 | **0** ✅ |
-| **Python Packages** | 2 | 10 | - | - | 12 |
-| **TOTAL** | **2** | **10** | **16** | **1** | **29** |
+| Categoría | CRITICAL | HIGH | MEDIUM | LOW | UNKNOWN | Total |
+|-----------|:--------:|:----:|:------:|:---:|:------:|:-----:|
+| **Alpine OS** | 0 | 0 | 0 | 0 | 0 | **0** ✅ |
+| **Python Packages** | 0 | 0 | 4 | 0 | 0 | 4 |
+| **TOTAL** | **0** | **0** | **4** | **0** | **0** | **4** |
 
-**Vulnerabilidades restantes:**
-- **CVE-2025-13836** (CRITICAL): cpython - DoS en http.client (mismo que insegura)
-- **CVE-2024-42005** (CRITICAL): Django - SQL injection (mismo que insegura)
-- `Django 4.2.9`: 10 CVEs (idénticos a imagen insegura)
-- `gunicorn 21.2.0`: 2 CVEs (idénticos a imagen insegura)
-
-**Nota importante:** Las vulnerabilidades restantes provienen exclusivamente de las dependencias Python (Django 4.2.9 y Gunicorn 21.2.0), **NO del sistema operativo base**. Alpine Linux 3.23.2 tiene **0 vulnerabilidades** detectadas.
+**Hallazgos relevantes:**
+- No se detectan CVEs en el sistema operativo base Alpine 3.23.2.
+- Las 4 vulnerabilidades (todas MEDIUM) pertenecen a dependencias Python: Django (CVE-2025-13372, CVE-2025-64460) y pip (CVE-2025-8869 en dos ubicaciones de instalación).
 
 #### Análisis Comparativo
 
 ```
-Distribución de CVEs - Imagen INSEGURA (Total: 1,257)
+Distribución de CVEs - Imagen INSEGURA (Total: 1,231)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CRITICAL  ▓░░░░░░░░░░░░░░░░░░░░░░░░░░   6 (0.5%)
-HIGH      ▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░  94 (7.5%)
-MEDIUM    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 334 (26.6%)
-LOW       ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 823 (65.4%)
+CRITICAL  ▓░░░░░░░░░░░░░░░░░░░░░░░░░░   4 (0.3%)
+HIGH      ▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░  84 (6.8%)
+MEDIUM    ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░ 321 (26.1%)
+LOW       ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 817 (66.4%)
+UNKNOWN   ░░░░░░░░░░░░░░░░░░░░░░░░░░   5 (0.4%)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Distribución de CVEs - Imagen SEGURA (Total: 29)
+Distribución de CVEs - Imagen SEGURA (Total: 4)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CRITICAL  ▓▓▓░░░░░░░░░░░░░░░░░░░░░░░   2 (6.9%)
-HIGH      ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░  10 (34.5%)
-MEDIUM    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░  16 (55.2%)
-LOW       ▓░░░░░░░░░░░░░░░░░░░░░░░░░   1 (3.4%)
+CRITICAL  ░░░░░░░░░░░░░░░░░░░░░░░░░░░   0 (0%)
+HIGH      ░░░░░░░░░░░░░░░░░░░░░░░░░░░   0 (0%)
+MEDIUM    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  4 (100%)
+LOW       ░░░░░░░░░░░░░░░░░░░░░░░░░░░   0 (0%)
+UNKNOWN   ░░░░░░░░░░░░░░░░░░░░░░░░░░░   0 (0%)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -839,14 +828,15 @@ LOW       ▓░░░░░░░░░░░░░░░░░░░░░░�
 
 | Severidad | Insegura | Segura | Eliminadas | Reducción |
 |-----------|:--------:|:------:|:----------:|:---------:|
-| CRITICAL | 6 | 2 | 4 | **66.7%** |
-| HIGH | 94 | 10 | 84 | **89.4%** |
-| MEDIUM | 334 | 16 | 318 | **95.2%** |
-| LOW | 823 | 1 | 822 | **99.9%** |
-| **TOTAL** | **1,257** | **29** | **1,228** | **97.7%** |
+| CRITICAL | 4 | 0 | 4 | **100%** |
+| HIGH | 84 | 0 | 84 | **100%** |
+| MEDIUM | 321 | 4 | 317 | **98.8%** |
+| LOW | 817 | 0 | 817 | **100%** |
+| UNKNOWN | 5 | 0 | 5 | **100%** |
+| **TOTAL** | **1,231** | **4** | **1,227** | **99.7%** |
 
 **Impacto del cambio de base image:**
-- Debian OS (insegura): **88 CVEs** (4 CRITICAL + 84 HIGH)
+- Debian OS (insegura): **1,229 CVEs** distribuidas en todas las severidades.
 - Alpine OS (segura): **0 CVEs** ✅
 - **Reducción total en CVEs de OS: 100%**
 
@@ -948,12 +938,12 @@ La implementación de hardening produjo resultados cuantificables y verificables
 - Paquetes del sistema: 493 → 38 (**92.3% menos**)
 
 **Vulnerabilidades (verificado con Trivy v0.68):**
-- Total CVEs: 1,257 → 29 (**97.7% menos**, 1,228 eliminadas)
-- CVEs CRITICAL: 6 → 2 (**66.7% menos**)
-- CVEs HIGH: 94 → 10 (**89.4% menos**)
-- CVEs del OS: 88 → 0 (**100% menos** - Alpine sin vulnerabilidades)
+- Total CVEs: 1,231 → 4 (**99.7% menos**, 1,227 eliminadas)
+- CVEs CRITICAL: 4 → 0 (**100% menos**)
+- CVEs HIGH: 84 → 0 (**100% menos**)
+- CVEs del OS: 1,229 → 0 (**100% menos** - Alpine sin vulnerabilidades)
 
-**Resultado:** La imagen segura tiene **43.3 veces menos** vulnerabilidades que la insegura.
+**Resultado:** La imagen segura tiene **≈308 veces menos** vulnerabilidades que la insegura.
 
 ### Conclusión 2: Ejecución No-Root es Crítica
 
@@ -1233,15 +1223,15 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 **Documento Clasificado Como:** Trabajo Académico - Uso Educativo  
 **Versión:** 1.0  
-**Última Actualización:** 17 de enero de 2026  
+**Última Actualización:** 18 de enero de 2026  
 **Estado:** Completado  
 
 **Resultados Experimentales Verificados:**
-- ✅ Imagen insegura construida: 1.22 GB, UID 0 (root), 1,257 CVEs
-- ✅ Imagen segura construida: 90.4 MB, UID 1001 (appuser), 29 CVEs
+- ✅ Imagen insegura construida: 1.22 GB, UID 0 (root), 1,231 CVEs (incluye 5 UNKNOWN)
+- ✅ Imagen segura construida: 90.4 MB, UID 1001 (appuser), 4 CVEs
 - ✅ Reducción de tamaño: 92.6% (1.13 GB eliminados)
-- ✅ Reducción de vulnerabilidades: 97.7% (1,228 CVEs eliminadas)
-- ✅ Escaneo con Trivy v0.68 (17/01/2026)
+- ✅ Reducción de vulnerabilidades: 99.7% (1,227 CVEs eliminadas)
+- ✅ Escaneo con Trivy v0.68 (18/01/2026)
 - ✅ 16 mejoras de seguridad implementadas y validadas
 - ✅ Alpine OS: 0 vulnerabilidades de sistema operativo
 

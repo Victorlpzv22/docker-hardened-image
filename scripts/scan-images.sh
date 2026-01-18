@@ -41,8 +41,8 @@ echo -e "${RED}=========================================="
 echo "  🔓 Escaneando imagen INSEGURA"
 echo "==========================================${NC}"
 
-echo -e "${YELLOW}Generando reporte en tabla...${NC}"
-$TRIVY_CMD image --severity HIGH,CRITICAL demo-app:insecure
+echo -e "${YELLOW}Generando reporte en tabla (CRITICAL,HIGH,MEDIUM,LOW)...${NC}"
+$TRIVY_CMD image --severity CRITICAL,HIGH,MEDIUM,LOW demo-app:insecure
 
 echo -e "${YELLOW}Generando reporte JSON...${NC}"
 if [ "$TRIVY_CMD" = "trivy" ]; then
@@ -62,8 +62,8 @@ echo -e "${GREEN}=========================================="
 echo "  🔒 Escaneando imagen SEGURA"
 echo "==========================================${NC}"
 
-echo -e "${YELLOW}Generando reporte en tabla...${NC}"
-$TRIVY_CMD image --severity HIGH,CRITICAL demo-app:secure
+echo -e "${YELLOW}Generando reporte en tabla (CRITICAL,HIGH,MEDIUM,LOW)...${NC}"
+$TRIVY_CMD image --severity CRITICAL,HIGH,MEDIUM,LOW demo-app:secure
 
 echo -e "${YELLOW}Generando reporte JSON...${NC}"
 if [ "$TRIVY_CMD" = "trivy" ]; then
@@ -85,16 +85,29 @@ echo "=========================================="
 
 # Contar vulnerabilidades (si jq está disponible)
 if command -v jq &> /dev/null; then
-    INSECURE_VULNS=$(jq '[.Results[].Vulnerabilities // [] | length] | add // 0' "$REPORTS_DIR/insecure-report.json")
-    SECURE_VULNS=$(jq '[.Results[].Vulnerabilities // [] | length] | add // 0' "$REPORTS_DIR/secure-report.json")
-    
-    echo -e "${RED}🔓 Imagen Insegura: $INSECURE_VULNS vulnerabilidades${NC}"
-    echo -e "${GREEN}🔒 Imagen Segura:   $SECURE_VULNS vulnerabilidades${NC}"
+    count_all() { jq '[.Results[].Vulnerabilities[]?] | length' "$1"; }
+    count_sev() { jq --arg sev "$2" '[.Results[].Vulnerabilities[]? | select(.Severity==$sev)] | length' "$1"; }
+
+    IN_TOTAL=$(count_all "$REPORTS_DIR/insecure-report.json")
+    IN_CRIT=$(count_sev "$REPORTS_DIR/insecure-report.json" "CRITICAL")
+    IN_HIGH=$(count_sev "$REPORTS_DIR/insecure-report.json" "HIGH")
+    IN_MED=$(count_sev "$REPORTS_DIR/insecure-report.json" "MEDIUM")
+    IN_LOW=$(count_sev "$REPORTS_DIR/insecure-report.json" "LOW")
+
+    SEC_TOTAL=$(count_all "$REPORTS_DIR/secure-report.json")
+    SEC_CRIT=$(count_sev "$REPORTS_DIR/secure-report.json" "CRITICAL")
+    SEC_HIGH=$(count_sev "$REPORTS_DIR/secure-report.json" "HIGH")
+    SEC_MED=$(count_sev "$REPORTS_DIR/secure-report.json" "MEDIUM")
+    SEC_LOW=$(count_sev "$REPORTS_DIR/secure-report.json" "LOW")
+
+    echo -e "${RED}🔓 Imagen Insegura:${NC} total=$IN_TOTAL | CRIT=$IN_CRIT | HIGH=$IN_HIGH | MED=$IN_MED | LOW=$IN_LOW"
+    echo -e "${GREEN}🔒 Imagen Segura:  ${NC} total=$SEC_TOTAL | CRIT=$SEC_CRIT | HIGH=$SEC_HIGH | MED=$SEC_MED | LOW=$SEC_LOW"
     echo ""
-    
-    DIFF=$((INSECURE_VULNS - SECURE_VULNS))
-    PERCENT=$(echo "scale=1; ($DIFF / $INSECURE_VULNS) * 100" | bc 2>/dev/null || echo "N/A")
-    echo -e "${BLUE}📉 Reducción: $DIFF vulnerabilidades ($PERCENT%)${NC}"
+
+    DIFF=$((IN_TOTAL - SEC_TOTAL))
+    PERCENT=$(echo "scale=1; ($DIFF / $IN_TOTAL) * 100" | bc 2>/dev/null || echo "N/A")
+    echo -e "${BLUE}📉 Reducción total: $DIFF vulnerabilidades ($PERCENT%)${NC}"
+    echo -e "${BLUE}   CRITICAL: -$((IN_CRIT-SEC_CRIT)) | HIGH: -$((IN_HIGH-SEC_HIGH)) | MED: -$((IN_MED-SEC_MED)) | LOW: -$((IN_LOW-SEC_LOW))${NC}"
 else
     echo -e "${YELLOW}⚠️  Instala 'jq' para ver resumen de vulnerabilidades${NC}"
     echo "   Los reportes JSON están disponibles en: $REPORTS_DIR/"

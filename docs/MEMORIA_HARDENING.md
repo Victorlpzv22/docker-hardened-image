@@ -308,14 +308,14 @@ Gunicorn/Django requieren `SIGTERM` para cerrar conexiones a base de datos y ter
 Para validar objetivamente la mejora, sometimos ambas imágenes (`insecure` y `secure`) a un análisis estático de vulnerabilidades utilizando **Trivy v0.68**.
 
 ### 4.3.1 Métricas de Reducción de Vulnerabilidades
-Los resultados son contundentes. Hemos pasado de un sistema con **1,257 vulnerabilidades conocidas** a uno con solo **29**, reduciendo la superficie de ataque en un **97.7%**.
+Los resultados son contundentes. Hemos pasado de un sistema con **1,231 vulnerabilidades conocidas** a uno con solo **4**, reduciendo la superficie de ataque en un **99.7%**.
 
 | Métrica | Imagen Insegura | Imagen Segura | Mejora |
 |:--- |:--- |:--- |:--- |
 | **Tamaño Imagen** | 1.22 GB | 90.4 MB | **Reducción 92.6%** |
-| **Total CVEs** | 1,257 | 29 | **Reducción 97.7%** |
-| **CRITICAS** | 78 | 0 | **Reducción 100%** |
-| **ALTAS** | 408 | 1 | **Reducción 99.8%** |
+| **Total CVEs** | 1,231 | 4 | **Reducción 99.7%** |
+| **CRITICAS** | 4 | 0 | **Reducción 100%** |
+| **ALTAS** | 84 | 0 | **Reducción 100%** |
 
 *> La imagen segura ha logrado eliminar **todas** las vulnerabilidades críticas, un hito importante para la seguridad del proyecto.*
 
