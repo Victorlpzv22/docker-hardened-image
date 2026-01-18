@@ -4,12 +4,12 @@
 # =============================================
 
 # Django framework
-Django==4.2.9 \
-    --hash=sha256:2cc2fc7d1708ada170ddd6c99f35cc25db664f165d3794bc7723f46b2f8c8984
+Django==4.2.26 \
+    --hash=sha256:c96e64fc3c359d051a6306871bd26243db1bd02317472a62ffdbe6c3cae14280
 
 # Gunicorn WSGI server
-gunicorn==21.2.0 \
-    --hash=sha256:3213aa5e8c24949e792bcacfc176fef362e7aac80b76c56f6b5122bf350722f0
+gunicorn==22.0.0 \
+    --hash=sha256:350679f91b24062c86e386e198a15438d53a7a8207235a78ba1b53df4c4378d9
 
 # Dependencies (pinned with hashes)
 asgiref==3.11.0 \
