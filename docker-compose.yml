@@ -1,0 +1,128 @@
+# =============================================
+# DOCKER COMPOSE - HARDENED V2
+# Incluye mejoras de prioridad ALTA y MEDIA
+# =============================================
+
+services:
+  # =============================================
+  # IMAGEN INSEGURA (para comparación)
+  # =============================================
+  app-insecure:
+    image: demo-app:insecure
+    build:
+      context: ./app
+      dockerfile: ../insecure/Dockerfile
+    container_name: demo-insecure
+    ports:
+      - "8001:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - DJANGO_SECRET_KEY=super-insecure-key-12345
+    # ❌ Sin restricciones de seguridad
+    networks:
+      - external
+
+  # =============================================
+  # IMAGEN SEGURA (hardened)
+  # =============================================
+  app-secure:
+    image: demo-app:secure
+    build:
+      context: ./app
+      dockerfile: ../secure/Dockerfile
+    container_name: demo-secure
+    ports:
+      - "8002:8000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      # ✅ Secretos se inyectan en runtime, no hardcodeados
+      # - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+    
+    # =============================================
+    # MEJORAS DE SEGURIDAD RUNTIME - PRIORIDAD ALTA
+    # =============================================
+    security_opt:
+      - no-new-privileges:true
+      # ✅ MEJORA ALTA: Seccomp profile personalizado
+      - seccomp:./secure/seccomp-profile.json
+      # ✅ MEJORA MEDIA: AppArmor (requiere perfil en el host)
+      - apparmor:docker-default
+    
+    # ✅ Sistema de archivos de solo lectura
+    read_only: true
+    
+    # ✅ tmpfs para directorios que necesitan escritura
+    tmpfs:
+      - /tmp:noexec,nosuid,size=10m
+    
+    # ✅ Eliminar TODAS las capabilities de Linux
+    cap_drop:
+      - ALL
+    
+    # =============================================
+    # MEJORAS DE SEGURIDAD - PRIORIDAD MEDIA
+    # =============================================
+    
+    # ✅ MEJORA MEDIA: Límites de recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    
+    # ✅ MEJORA MEDIA: Logging seguro con límites
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "production,secure"
+    
+    # ✅ Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    
+    # ✅ MEJORA MEDIA: Network isolation
+    networks:
+      - internal
+      - external
+    
+    # ✅ Dependencias y orden de inicio
+    depends_on:
+      - app-insecure
+
+# =============================================
+# MEJORA MEDIA: Network Isolation
+# =============================================
+networks:
+  # Red interna (sin acceso a internet)
+  internal:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  
+  # Red externa (con acceso controlado)
+  external:
+    driver: bridge
+
+# =============================================
+# NOTA: Para Docker Secrets (producción)
+# =============================================
+# Descomentar para usar en producción:
+# secrets:
+#   django_secret_key:
+#     file: ./secrets/django_key.txt
+#
+# Y añadir a app-secure:
+#   secrets:
+#     - django_secret_key
