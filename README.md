@@ -11,11 +11,11 @@ Este proyecto demuestra las diferencias de seguridad entre una imagen Docker vul
 
 | Métrica | Imagen Insegura | Imagen Segura | Reducción |
 |---------|-----------------|---------------|-----------|
-| Tamaño | 1.79 GB | 153 MB | 91% |
+| Tamaño | 1.22 GB | 90.4 MB | 92.6% |
 | Total CVEs | 1,257 | 29 | 97.7% |
-| CVEs CRITICAL | 6 | 2 | 67% |
-| CVEs HIGH | 94 | 10 | 89% |
-| CVEs MEDIUM | 334 | 16 | 95% |
+| CVEs CRITICAL | 78 | 0 | 100% |
+| CVEs HIGH | 408 | 1 | 99.8% |
+| CVEs MEDIUM | 530 | 9 | 98.3% |
 
 ## Estructura del Proyecto
 
