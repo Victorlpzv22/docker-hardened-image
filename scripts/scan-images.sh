@@ -105,7 +105,7 @@ if command -v jq &> /dev/null; then
     echo ""
 
     DIFF=$((IN_TOTAL - SEC_TOTAL))
-    PERCENT=$(echo "scale=1; ($DIFF / $IN_TOTAL) * 100" | bc 2>/dev/null || echo "N/A")
+    PERCENT=$(echo "scale=1; 100 * $DIFF / $IN_TOTAL" | bc 2>/dev/null || echo "N/A")
     echo -e "${BLUE}📉 Reducción total: $DIFF vulnerabilidades ($PERCENT%)${NC}"
     echo -e "${BLUE}   CRITICAL: -$((IN_CRIT-SEC_CRIT)) | HIGH: -$((IN_HIGH-SEC_HIGH)) | MED: -$((IN_MED-SEC_MED)) | LOW: -$((IN_LOW-SEC_LOW))${NC}"
 else
