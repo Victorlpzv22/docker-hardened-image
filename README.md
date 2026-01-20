@@ -116,7 +116,7 @@ docker exec demo-secure env | findstr SECRET
 ## Equipo
 
 - Víctor López Valero
-- Pedro Ortiz Ortiz
+- Pedro Ortiz Villanueva
 - Santiago Díaz Izquierdo
 - Jorge Pastor Velasco
 
